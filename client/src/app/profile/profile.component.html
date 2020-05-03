@@ -1,0 +1,268 @@
+<button (click)="logout()" class="btn btn-secondary">Sign out</button><br><br>
+<div *ngIf="user" class="container">
+  <div *ngIf="msg" class="alert alert-primary w-50 text-center" style="position: fixed; top:0; font-size: 1.2em">{{msg}}</div>
+  <!-- <a [href]="llnk" download="" -->
+  <div>
+    <p class="text-center" style="font-size:1.2em;">---------------------------------- Conference ---------------------------------------</p>
+    <div class="form-group">
+      <label>Select conference: </label>
+      <select [(ngModel)]="val" (change)="confChanged()" class="custom-select">
+        <option *ngFor="let conf of confs" value={{conf.id}}>{{conf.name}}</option>
+      </select><br><br>
+    </div>
+    <div *ngIf="pc && !chair" class="form-group">
+      <label>Select role: </label>
+      <select [(ngModel)]="crt" (change)="roleChanged()" class="custom-select">
+        <option value="author">Author</option>
+        <option value="pc">PC member</option>
+        <!-- <option value="chair" *ngIf="chair">Co-Chair</option> -->
+      </select><br><br>
+    </div>
+    <!-- -------------------------------------------- User -------------------------------------------------- -->
+    <div *ngIf="crt=='author'">
+        <label>Paper name: </label>
+        <input class="form-control" type="text" [(ngModel)]="name"><br><br>
+        <label>Topics: (please write a semicolon after each topic, eg topic1; topic2;) </label>
+        <input class="form-control" type="text" [(ngModel)]="topics"><br><br>
+        <label>Keywords: (please write a semicolon after each keyword, eg word1; word2;) </label>
+        <input class="form-control" type="text" [(ngModel)]="keywords"><br><br>
+        <label>Co-authors: (please write a semicolon after each author, eg author1; author2;) </label>
+        <input class="form-control" type="text" [(ngModel)]="coauthors"><br><br>
+        <label>Abstract: </label>
+        <input (change)="aFileChange($event)" type="file" name="abstract">
+        <button (click)="uploadAbstract()" class="btn btn-primary">Upload abstract</button><br><br>
+        <label>Paper: </label>
+        <input (change)="pFileChange($event)" type="file" name="paper">
+        <button (click)="uploadPaper()" class="btn btn-primary">Upload Paper</button><br><br>
+    </div>
+    <!-- ------------------------------------------ PC Member -------------------------------------------------- -->
+    <div *ngIf="crt=='pc'" class="form-group">
+      <select [(ngModel)]="pcCrt" class="custom-select">
+        <option value="bids">Bidding</option>
+        <option value="reviews">Reviewing</option>
+      </select><br><br>
+      <table class="table table-striped table-dark" *ngIf="pcCrt=='bids'">
+        <thead>
+          <tr>
+            <th scope="col">Name</th>
+            <th scope="col">Topics</th>
+            <th scope="col">Keywords</th>
+            <th scope="col">Co-authors</th>
+            <th scope="col">Abstract</th>
+            <th scope="col">Paper</th>
+            <th scope="col" colspan="2">Bid</th>
+          </tr>
+        </thead>
+        <tr *ngFor="let paper of files">
+          <td>{{paper.name}}</td>
+          <td>{{flatten(paper.topics)}}</td>
+          <td>{{flatten(paper.keywords)}}</td>
+          <td>{{flatten(paper.coauthors)}}</td>
+          <td (click)="downloadAbstract(paper.abstract_file)">
+            <a href="" [download]="paper.abstract_file" *ngIf="paper.abstract_file!=null"><button class="btn btn-primary" >Download</button></a>
+            <span *ngIf="paper.abstract_file==null">N/A</span>
+          </td>
+          <td (click)="downloadPaper(paper.paper_file)">
+            <a href="" [download]="paper.paper_file" *ngIf="paper.paper_file!=null"><button class="btn btn-primary">Download</button></a>
+            <span *ngIf="paper.paper_file==null">N/A</span>
+          </td>
+          <td>
+            <select [(ngModel)]="agrees[paper.id]">
+              <option value="yes">Yes</option>
+              <option value="ok">Ok</option>
+              <option value="no">No</option>
+            </select>
+          </td>
+          <td>
+            <button (click)="placeBid(paper.id)" class="btn btn-primary">Place bid</button>
+          </td>
+        </tr>
+      </table>
+      <table *ngIf="pcCrt=='reviews'" class="table table-striped table-dark">
+        <thead>
+          <tr>
+            <th>Paper Name</th>
+            <th>Recommandation</th>
+            <th>Review result</th>
+            <th>Send review</th>
+          </tr>
+        </thead>
+        <tr *ngFor="let rev of reviews">
+          <td (click)="otherReviews(rev.paper.id, rev.id)">{{rev.paper.name}}</td>
+          <td>
+            <textarea [(ngModel)]="rev.recommandation"></textarea>
+          </td>
+          <td>
+            <select [(ngModel)]="rev.result">
+              <option value="1">Strong accept</option>
+              <option value="1">Accept</option>
+              <option value="1">Weak accept</option>
+              <option value="0">Borderline</option>
+              <option value="-1">Weak reject</option>
+              <option value="-1">Reject</option>
+              <option value="-1">Strong reject</option>
+            </select>
+          </td>
+          <td>
+            <button (click)="sendReview(rev.recommandation, rev.result, rev.paper.id)" class="btn btn-primary">Review</button>
+          </td>
+        </tr>
+      </table>
+      <table class="table table-dark" *ngIf="otherRevs.length">
+        <thead>
+          <tr>
+            <th>Reviewer Name</th>
+            <th>Recommandations</th>
+            <th>Result</th>
+          </tr>
+        </thead>
+        <tr *ngFor="let rev of otherRevs">
+          <td>{{rev.dataValues.pcmember.user.name}}</td>
+          <td>{{rev.dataValues.recommandation}}</td>
+          <td>{{rev.dataValues.result}}</td>
+        </tr>
+      </table>
+    </div>
+    <!-- -------------------------------------------- Chair -------------------------------------------------- -->
+    <div *ngIf="crt=='chair'">
+      <label>Abstract deadline: </label>
+      <input type="text" [(ngModel)]="selectedConf.absDeadline" style="width: 250px"><br><br>
+      <label>Paper deadline: </label>
+      <input type="text" [(ngModel)]="selectedConf.paperDeadline" style="width: 250px"><br><br>
+      <label>Bid deadline: </label>
+      <input type="text" [(ngModel)]="selectedConf.bidDeadline" style="width: 250px"><br><br>
+      <button class="btn btn-primary" (click)="updateDeadlines()">Update deadlines</button><br><br>
+      <select [(ngModel)]="chairCrt" class="custom-select">
+        <option value="bids">Bids</option>
+        <option value="results">Results</option>
+        <option value="sessions">Sessions</option>
+      </select><br><br>
+      <table class="table table-dark" *ngIf="chairCrt=='bids'">
+        <thead>
+          <tr>
+            <th scope="col">Paper Name</th>
+            <th scope="col">Reviewer Name</th>
+            <th scope="col">Reviewer Email</th>
+            <th scope="col">Bid</th>
+            <th scope="col"># of assigned papers</th>
+            <th scope="col">Assign</th>
+          </tr>
+        </thead>
+        <tr *ngFor="let bid of allBids">
+          <td>{{bid.paper.name}}</td>
+          <td>{{bid.pcmember.user.name}}</td>
+          <td>{{bid.pcmember.user.email}}</td>
+          <td>{{bid.agree}}</td>
+          <td>{{bid.pcmember.reviews.length}}</td>
+          <td *ngIf="bid.agree!='no'">
+            <button (click)="assignReview(bid.paper.id, bid.pcmember.id)" class="btn btn-primary">Assign review</button>
+          </td>
+        </tr>
+      </table>
+      <div *ngIf="chairCrt=='results'">
+        <button class="btn btn-primary" (click)="generateResults()">Generate results</button><br><br>
+        <button class="btn btn-primary" (click)="sendResults()">Send results</button><br><br>
+        <table class="table table-dark">
+          <thead>
+            <tr>
+              <th scope="col">Paper Name</th>
+              <th scope="col">Topics</th>
+              <th scope="col">Kewords</th>
+              <th scope="col">Co-authors</th>
+              <th scope="col">Abstract</th>
+              <th scope="col">Paper</th>
+              <th scope="col">Author Name</th>
+              <th scope="col">Result</th>
+              <th scope="col" colspan="2">Update result</th>
+            </tr>
+          </thead>
+          <tr *ngFor="let paper of files">
+            <td>{{paper.name}}</td>
+            <td>{{flatten(paper.topics)}}</td>
+            <td>{{flatten(paper.keywords)}}</td>
+            <td>{{flatten(paper.coauthors)}}</td>
+            <td (click)="downloadAbstract(paper.abstract_file)">
+              <button *ngIf="paper.abstract_file!=null" class="btn btn-light">Download</button>
+              <span *ngIf="paper.abstract_file==null">N/A</span>
+            </td>
+            <td (click)="downloadPaper(paper.paper_file)">
+              <button *ngIf="paper.paper_file!=null" class="btn btn-light">Download</button>
+              <span *ngIf="paper.paper_file==null">N/A</span>
+            </td>
+            <td>
+              {{paper.user.name}}
+            </td>
+            <td>{{paper.accepted? paper.accepted : "N/A"}}</td>
+            <td>
+              <select [(ngModel)]="paper.accepted">
+                <option value="1">Strong accept</option>
+                <option value="1">Accept</option>
+                <option value="1">Weak accept</option>
+                <option value="0">Borderline</option>
+                <option value="-1">Weak reject</option>
+                <option value="-1">Reject</option>
+                <option value="-1">Strong reject</option>
+              </select>
+            </td>
+            <td>
+              <button (click)="updateResult(paper.id, paper.accepted)" class="btn btn-primary">Update result</button>
+            </td>
+          </tr>
+        </table>
+      </div>
+      <div *ngIf="chairCrt=='sessions'">
+        <label>Room: </label>
+        <input class="form-control" type="text" [(ngModel)]="room"><br><br>
+        <label>Time: </label>
+        <input class="form-control" type="datetime-local" [(ngModel)]="datt"><br><br>
+        <label>Session chair: </label>
+        <select [(ngModel)]="sessionChair">
+          <option *ngFor="let mem of pcmembers" value="{{mem.id}}">{{mem.user.name}}</option>
+        </select><br><br>
+        <button (click)="saveSession()" class="btn btn-primary">Save Session</button><br><br>
+
+        <table *ngIf="sessions.length" class="table table-dark">
+          <thead>
+            <tr>
+              <th>Session Room</th>
+              <th>Session Time</th>
+              <th>Session Chair</th>
+              <th colspan="2">Speaker</th>
+            </tr>
+          </thead>
+          <tr *ngFor="let sess of sessions">
+            <td>{{sess.room}}</td>
+            <td>{{sess.time}}</td>
+            <td>{{sess.pcmember.user.name}}</td>
+            <td>
+              <select [(ngModel)]="speaker">
+                <option *ngFor="let sp of acPapers" value="{{sp.user.id}}">{{sp.user.name}}</option>
+              </select>
+            </td>
+            <td>
+              <button (click)="addSpeaker(sess.id)" class="btn btn-light">Add sepaker</button>
+            </td>
+          </tr>
+        </table>
+      </div>
+    </div>
+    <br><br>
+    <p class="text-center" style="font-size:1.2em;">----------------------- User account settings -----------------------------</p>
+  </div>
+  <label>Name: </label>
+  <input class="form-control" type="text" [(ngModel)]="user.name"/><br><br>
+  <label>Email: </label>
+  <input class="form-control" type="text" [(ngModel)]="user.email"/><br><br>
+  <label>Affiliation: </label>
+  <input class="form-control" type="text" [(ngModel)]="user.affiliation"/><br><br>
+  <label>Webpage: </label>
+  <input class="form-control" type="text" [(ngModel)]="user.webpage"/><br><br>
+  <label>Username: </label>
+  <input class="form-control" type="text" [(ngModel)]="user.username"/><br><br>
+  <button (click)="updateUser()" class="btn btn-warning">Update user</button><br><br>
+  <label>Password: </label>
+  <input class="form-control" type="password" [(ngModel)]="user.password">
+  <br><br>
+  <button (click)="updatePassword()" class="btn btn-warning">Update password</button><br><br><br>
+  <button (click)="deleteAccount()" class="btn btn-danger">Delete Account</button>
+</div>

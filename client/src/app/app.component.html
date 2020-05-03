@@ -1,0 +1,13 @@
+<div class="container">
+    <h1 class="text-center"><a routerLink="/">{{title}}</a></h1>
+
+    <nav class="nav">
+      <a class="nav-link" routerLink="/" routerLinkActive="active">Home</a>
+      <a class="nav-link" routerLink="/signin" routerLinkActive="active">Sign In</a>
+      <a class="nav-link" routerLink="/profile" routerLinkActive="active">Profile</a>
+    </nav>
+    <div class="jumbotron">
+      <router-outlet></router-outlet>
+    </div>
+</div>
+

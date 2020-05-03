@@ -1,0 +1,6 @@
+<div *ngIf="confs.length">
+  <div *ngFor="let cn of confs" class="card card-body" (click)="gotoConf(cn.id)" style="cursor: pointer">
+    <p>{{cn.name}}</p>
+  </div>
+</div>
+

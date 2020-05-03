@@ -1,0 +1,9 @@
+<div class="card card-body">
+  <p>Conf name: {{conf.name}}</p>
+  <p>Begin: {{getDate(conf.begin)}}</p>
+  <p>End: {{getDate(conf.end)}}</p>
+  <p>Abstract deadline: {{getDate(conf.absDeadline)}}</p>
+  <p>Paper deadline: {{getDate(conf.paperDeadline)}}</p>
+
+  <button (click)="gotoRegistration()" class="btn btn-primary">Register for this conference</button>
+</div>

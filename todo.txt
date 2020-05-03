@@ -1,0 +1,24 @@
+all requests must be handeld by a service: conferenceService, userService, pcmemberService, chairService
+
+------------ Home page -------------
+done
+
+------------ Conference page ---------
+done
+
+------------ Registration page --------
+done
+
+----------- Sign in page --------------
+done
+
+----------- User page -------------------
+done
+
+
+
+
+pc get reviews: frontend -> send get request to /api/reviews => for each review in reviews {
+    if review.result != null
+        send get request to /api/otherrevs to get all reviews on given paper
+}

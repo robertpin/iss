@@ -1,0 +1,33 @@
+<div *ngIf="alertMsg" [className]="eror">{{alertMsg}}</div>
+<div *ngIf="!logged">
+  <div class="form-group">
+    <label>Name: </label>
+    <input class="form-control" type="text" [(ngModel)]="user.name"/>
+  </div>
+  <div class="form-group">
+    <label>Email: </label>
+    <input class="form-control" type="text" [(ngModel)]="user.email"/>
+  </div>
+  <div class="form-group">
+    <label>Affiliation: </label>
+    <input class="form-control" type="text" [(ngModel)]="user.affiliation"/>
+  </div>
+  <div class="form-group">
+    <label>Webpage: </label>
+    <input class="form-control" type="text" [(ngModel)]="user.webpage"/>
+  </div>
+  <div class="form-group">
+    <label>Username: </label>
+    <input class="form-control" type="text" [(ngModel)]="user.username"/>
+  </div>
+  <div class="form-group">
+    <label>Password: </label>
+    <input class="form-control" type="password" [(ngModel)]="user.password"/>
+  </div>
+  <button (click)="register()" class="btn btn-primary">Register</button>
+  <!-- <a href="signin"><button>Sign in instead</button></a> -->
+</div>
+
+<div *ngIf="logged">
+  <button (click)="enroll()" class="btn btn-primary">Enroll in this conference</button>
+</div>
